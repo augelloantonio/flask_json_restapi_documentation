@@ -1,0 +1,82 @@
+{
+    "name": "RestAPI",
+    "api_version": "1.0.0",
+    "rest_api": {
+        "User Management": [
+            {
+                "login": {
+                    "Resource Information": {
+                        "Method": "POST",
+                        "Description": "User Login.",
+                        "Endpoint": "/URL/yourendpoint/login",
+                        "Header": "Content-Type: application/json",
+                        "Requires Authentication?": "Yes - Private Authorization KEY to the request header"
+                    },
+                    "Request Body": {
+                        "Body": "{ 'username' : 'username', 'password':'password}"
+                    },
+                    "Success Response": {
+                        "200": {
+                            "Response": "Login successful."
+                        }
+                    },
+                    "Error Response": {
+                        "403": {
+                            "Response": "User could not be found or invalid data.",
+                            "Explanaition": "User could not be found or invalid data."
+                        },
+                        "400": {
+                            "Response": "Request error.",
+                            "Explanaition": "Error in the request."
+                        }
+                    }
+                }
+            }
+        ],
+        "Data Analysis": [
+            {
+                "doSomeCalculation": {
+                    "Resource Information": {
+                        "Method": "GET",
+                        "Description": "Returns the first function calculation.",
+                        "Endpoint": "/URL/yourendpoint/doSomeCalculation",
+                        "Header": "Content-Type: application/json",
+                        "Requires Authentication?": "No"
+                    },
+                    "Request Body": {
+                        "Body": "{ 'dataToAnalyze' : data}",
+                        "Data Type": "Float List",
+                        "List Size": "50000"
+                    },
+                    "Success Response": {
+                        "200": {
+                            "Response":"{'result': result}"
+                        }
+                        
+                    }
+                }
+            },
+            {
+                "doSomeOtherCalculation": {
+                    "Resource Information": {
+                        "Method": "PUT",
+                        "Description": "Returns the second function calculation.",
+                        "Endpoint": "/URL/yourendpoint/doSomeCalculation",
+                        "Header": "Content-Type: application/json",
+                        "Requires Authentication?": "No"
+                    },
+                    "Request Body": {
+                        "Body": "{ 'dataToAnalyze' : data}",
+                        "Data Type": "Int List",
+                        "List Size": "3000"
+                    },
+                    "Success Response": {
+                        "200": {
+                            "Response":"{'result': result}"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
