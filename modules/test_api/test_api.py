@@ -101,6 +101,7 @@ def test_all_apis_view():
         
         # Load API data from JSON file
         filename = os.path.join('static/docs/rest_api.json')
+        
         with open(filename) as api_file:
             data = json.load(api_file)
                 
