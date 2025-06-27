@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}APIs Monitor {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-3">API Execution Monitor</h2>
+
+    <!-- Live Stats Panel -->
+    <div class="row text-center">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5>Total APIs</h5>
+                    <h3 class="text-primary">{{ request_response_list | length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5>Successful</h5>
+                    <h3 class="text-success">{{ success_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5>Failed</h5>
+                    <h3 class="text-danger">{{ failure_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5>Average Time</h5>
+                    <h3 class="text-warning">{{ average_execution_time }}s</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <input type="text" id="searchBox" class="form-control" placeholder="Search API or URL...">
+        </div>
+        <div class="col-md-4">
+            <select id="statusFilter" class="form-control">
+                <option value="">Filter by Status</option>
+                <option value="2">Success (200-299)</option>
+                <option value="3">Redirect (300-399)</option>
+                <option value="4">Client Error (400-499)</option>
+                <option value="5">Server Error (500+)</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select id="timeFilter" class="form-control">
+                <option value="">Filter by Execution Time</option>
+                <option value="fast">Fast (<0.5s)</option>
+                <option value="medium">Medium (0.5s - 2s)</option>
+                <option value="slow">Slow (>2s)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive mt-3">
+        <table id="apiTable" class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Status</th>
+                    <th>Warning</th>
+                    <th>Execution Time</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in request_response_list %}
+                <tr class="{% if req.response_code >= 200 and req.response_code < 300 %}table-success{% elif req.response_code >= 300 and req.response_code < 400 %}table-warning{% elif req.response_code >= 400 %}table-danger{% else %}table-secondary{% endif %}"
+                    data-status="{{ req.response_code // 100 }}" data-time="{{ req.execution_time.total_seconds() }}">
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <span class="badge 
+                        {% if req.method == 'GET' %}bg-primary
+                        {% elif req.method == 'POST' %}bg-success
+                        {% elif req.method == 'PUT' %}bg-warning
+                        {% elif req.method == 'DELETE' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                            {{ req.method }}
+                        </span>
+                    </td>
+                    <td><code>{{ req.endpoint }}</code></td>
+                    <td><strong>{{ req.response_code }}</strong></td>
+                    <td>
+                        {% if req.response_warning %}
+                            <span class="text-danger">{{ req.response_warning }}</span>
+                        {% else %}
+                            <span class="text-muted">No Issues</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ req.execution_time.total_seconds() }}s</td>
+                    <td>
+                        {% if req.response_json %}
+                            <button class="btn btn-info btn-sm" data-bs-toggle="collapse" data-bs-target="#response{{ loop.index }}">View</button>
+                            <div id="response{{ loop.index }}" class="collapse mt-2">
+                                <pre class="border p-2 bg-light">{{ req.response_json | tojson(indent=2) }}</pre>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let table = $('#apiTable').DataTable();
+
+        // Search Filter
+        $('#searchBox').on('keyup', function () {
+            table.search(this.value).draw();
+        });
+
+        // Status Filter
+        $('#statusFilter').on('change', function () {
+            let status = this.value;
+            if (status) {
+                table.column(3).search("^" + status, true, false).draw();
+            } else {
+                table.column(3).search("").draw();
+            }
+        });
+
+        // Execution Time Filter
+        $('#timeFilter').on('change', function () {
+            let time = this.value;
+            table.rows().every(function () {
+                let row = $(this.node());
+                let timeValue = parseFloat(row.attr('data-time'));
+
+                if (time === "fast" && timeValue < 0.5) {
+                    row.show();
+                } else if (time === "medium" && timeValue >= 0.5 && timeValue <= 2) {
+                    row.show();
+                } else if (time === "slow" && timeValue > 2) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
